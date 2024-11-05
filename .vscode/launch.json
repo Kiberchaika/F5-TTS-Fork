@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "F5-TTS Dataset Test",
+            "name": "Dataset Test",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src",
@@ -14,7 +14,7 @@
             } 
         },
        {
-            "name": "F5-TTS Russian Finetune",
+            "name": "Russian Finetune",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src",
@@ -27,7 +27,7 @@
             "args": [
                 "--exp_name", "F5TTS_Base",
                 "--learning_rate", "0.0001",
-                "--batch_size_per_gpu", "16",  // 3200
+                "--batch_size_per_gpu", "4",  // 3200
                 "--batch_size_type", "sample",
                 "--max_samples", "64",
                 "--grad_accumulation_steps", "1",
@@ -46,7 +46,7 @@
             ]
         },
         {
-            "name": "F5-TTS Russian Finetune (modified vocab)",
+            "name": "Russian Finetune (modified vocab)",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src",

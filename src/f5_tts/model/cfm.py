@@ -249,6 +249,22 @@ class CFM(nn.Module):
         # mel is x1
         x1 = inp
 
+        # Test . audio from mel spectrogram
+        '''
+        from vocos import Vocos
+        import torchaudio
+        vocos = Vocos.from_pretrained("charactr/vocos-mel-24khz")
+        with torch.no_grad():
+            audio = vocos.decode(x1.detach().cpu().float().permute(0, 2, 1))
+            torchaudio.save(
+                '/home/k4/Python/F5-TTS-Fork/out.mp3',
+                audio[1].unsqueeze(0),
+                sample_rate=24000,
+                format="mp3"
+            )
+                        
+        '''
+
         # x0 is gaussian noise
         x0 = torch.randn_like(x1)
 

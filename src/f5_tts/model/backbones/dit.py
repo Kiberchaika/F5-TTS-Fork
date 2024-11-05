@@ -149,6 +149,7 @@ class DiT(nn.Module):
 
         rope = self.rotary_embed.forward_from_seq_len(seq_len)
 
+
         if self.long_skip_connection is not None:
             residual = x
 
