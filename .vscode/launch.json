@@ -1,0 +1,69 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "F5-TTS Russian Finetune",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "/home/k4/Python/F5-TTS/src",
+            "program": "finetune_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "--exp_name", "F5TTS_Base",
+                "--learning_rate", "0.0002",
+                "--batch_size_per_gpu", "3200",
+                "--batch_size_type", "frame",
+                "--max_samples", "64",
+                "--grad_accumulation_steps", "1",
+                "--max_grad_norm", "1",
+                "--epochs", "10000",
+                "--num_warmup_updates", "500",
+                "--save_per_updates", "4000",
+                "--last_per_steps", "10000",
+                "--dataset_name", "russian_dataset",
+                "--finetune", "True",
+                "--tokenizer", "custom",
+                "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
+                "--log_samples", "True",
+                "--logger", "tensorboard",
+                //"--pretrain", "/home/k4/Python/F5-TTS/ckpts/russian_dataset_/model_28000.pt",
+            ]
+        },
+        {
+            "name": "F5-TTS Russian Finetune 2",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "/home/k4/Python/F5-TTS/src",
+            "program": "finetune_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
+            "args": [
+                "--exp_name", "F5TTS_Base",
+                "--learning_rate", "0.0002",
+                "--batch_size_per_gpu", "3200",
+                "--batch_size_type", "frame",
+                "--max_samples", "64",
+                "--grad_accumulation_steps", "1",
+                "--max_grad_norm", "1",
+                "--epochs", "1000",
+                "--num_warmup_updates", "500",
+                "--save_per_updates", "4000",
+                "--last_per_steps", "10000",
+                "--dataset_name", "russian_dataset2",
+                "--finetune", "True",
+                "--tokenizer", "custom",
+                "--tokenizer_path", "../data/russian_dataset_custom/vocab.txt",
+                "--log_samples", "True",
+                "--logger", "tensorboard",
+                //"--pretrain", "/home/k4/Python/F5-TTS/ckpts/russian_dataset2_/model_4000.pt",
+            ]
+        }
+    ]
+}
