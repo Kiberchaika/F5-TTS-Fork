@@ -14,6 +14,9 @@ from tqdm import tqdm
 from f5_tts.model.modules import MelSpec
 from f5_tts.model.utils import default
 
+from typing import List, Dict
+import os
+import json
 
 class HFDataset(Dataset):
     def __init__(
@@ -156,8 +159,149 @@ class CustomDataset(Dataset):
         )
 
 
-# Dynamic Batch Sampler
 
+class RussianSingingDataset(Dataset):
+    def __init__(
+        self,
+        base_dir="/media/k4_nas/Datasets/Music_RU/Lyrics",
+        target_sample_rate=24_000,
+        hop_length=256,
+        n_mel_channels=100,
+        n_fft=1024,
+        win_length=1024,
+        mel_spec_type="vocos",
+        preprocessed_mel=False,
+        mel_spec_module: nn.Module | None = None,
+    ):
+        self.target_sample_rate = target_sample_rate
+        self.hop_length = hop_length
+        self.n_fft = n_fft
+        self.win_length = win_length
+        self.mel_spec_type = mel_spec_type
+        self.preprocessed_mel = preprocessed_mel
+        
+        self.min_duration = 5
+        self.max_duration = 25 
+
+        # Find all MP3 files recursively
+        self.json_files = []
+        for root, dirs, files in os.walk(base_dir):
+            for file in files:
+                if file.endswith('.json'):
+                    self.json_files.append(os.path.join(root, file))
+        
+        print(f"Found {len(self.json_files)} files")
+        
+        if not preprocessed_mel:
+            self.mel_spectrogram = default(
+                mel_spec_module,
+                MelSpec(
+                    n_fft=n_fft,
+                    hop_length=hop_length,
+                    win_length=win_length,
+                    n_mel_channels=n_mel_channels,
+                    target_sample_rate=target_sample_rate,
+                    mel_spec_type=mel_spec_type,
+                ),
+            )
+
+    def get_frame_len(self, index):
+        # Return approximate frame length for a 25-second audio
+        return (self.max_duration * self.target_sample_rate / self.hop_length)
+
+    def __len__(self):
+        return (200 * 60 * 60 // self.max_duration) # size of dataset
+
+    def __getitem__(self, index):
+        # Get random file regardless of index
+        
+        while True:
+            json_path = random.choice(self.json_files) # index % len(self.json_files) #
+
+            total_duration = 0
+            
+            # Parse the JSON data
+            filepath_json = open(json_path, 'r', encoding='utf-8') 
+            segments = json.load(filepath_json)
+
+            for segment in segments:
+                duration = segment['end'] - segment['start']
+                total_duration += duration
+
+            # If total duration is greater than target duration, break
+            if total_duration < self.min_duration:
+                continue
+
+            # get filepath from filepath_json with replace .json to .mp3
+            audio_path = json_path.replace('Lyrics', 'Vocal_Dereverb').replace('.json', '.mp3')
+            input_audio, source_sample_rate = torchaudio.load(audio_path)
+            
+            if input_audio.shape[0] > 1:
+                input_audio = torch.mean(input_audio, dim=0, keepdim=True)
+            
+            if source_sample_rate != self.target_sample_rate:
+                resampler = torchaudio.transforms.Resample(
+                    source_sample_rate, 
+                    self.target_sample_rate
+                )
+                input_audio = resampler(input_audio)
+
+
+            # Get random start index
+            start_idx = random.randint(0, len(segments) - 1)
+            
+            # Collect segments until we reach target duration
+            collected_segments = []
+            current_duration = 0
+            idx = start_idx
+            
+            while current_duration < self.max_duration and idx < len(segments):
+                segment = segments[idx]
+                duration = segment['end'] - segment['start']
+                if current_duration + duration > self.max_duration:
+                    break
+                current_duration += duration
+                collected_segments.append(segment)
+                idx += 1
+
+            if current_duration > self.max_duration or current_duration < self.min_duration:
+                continue
+
+            texts = [] 
+            audio = []
+            for i in range(start_idx, idx):
+                segment = segments[i]
+                texts.append(segment['text'])
+
+                # get segment from audio segment['start'] in ms to audio position
+                audio.append(input_audio[0][int(segment['start'] * self.target_sample_rate) : int(segment['end'] * self.target_sample_rate)]) 
+
+            text = ' '.join(texts).replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').strip().lower()   
+          
+            audio = torch.cat(audio, dim=0)
+            if audio.shape[0] < self.max_duration * self.target_sample_rate:
+                audio = torch.cat([audio, torch.zeros(self.max_duration * self.target_sample_rate - audio.shape[0])], dim=0)
+            audio = audio.unsqueeze(0)
+
+            # save audio as out.mp3
+            #torchaudio.save(f'/home/k4/Python/F5-TTS/out.mp3', audio, self.target_sample_rate)
+
+            break
+    
+
+    
+        if self.preprocessed_mel:
+            raise NotImplementedError("Preprocessed mel not supported in this version")
+        
+        mel_spec = self.mel_spectrogram(audio)
+        mel_spec = mel_spec.squeeze(0)  # '1 d t -> d t'
+        
+        return dict(
+            mel_spec=mel_spec,
+            text=text,
+        )
+       
+# Dynamic Batch Sampler
 
 class DynamicBatchSampler(Sampler[list[int]]):
     """Extension of Sampler that will do the following:
@@ -257,6 +401,13 @@ def load_dataset(
             train_dataset,
             durations=durations,
             preprocessed_mel=preprocessed_mel,
+            mel_spec_module=mel_spec_module,
+            **mel_spec_kwargs,
+        )
+
+    elif dataset_type == "RussianSingingDataset": 
+        train_dataset = RussianSingingDataset(
+            
             mel_spec_module=mel_spec_module,
             **mel_spec_kwargs,
         )

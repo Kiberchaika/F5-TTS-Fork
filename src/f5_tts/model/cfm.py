@@ -261,6 +261,10 @@ class CFM(nn.Module):
         φ = (1 - t) * x0 + t * x1
         flow = x1 - x0
 
+        # Free temporary tensors
+        #del x0
+        #torch.cuda.empty_cache()
+
         # only predict what is within the random mask span for infilling
         cond = torch.where(rand_span_mask[..., None], torch.zeros_like(x1), x1)
 

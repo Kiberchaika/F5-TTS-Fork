@@ -3,6 +3,8 @@ from __future__ import annotations
 import gc
 import os
 
+import pyarrow.lib # fix for pyarrow
+
 import torch
 import torchaudio
 import wandb
@@ -29,6 +31,7 @@ class Trainer:
         learning_rate,
         num_warmup_updates=20000,
         save_per_updates=1000,
+        samples_per_updates = 10000,
         checkpoint_path=None,
         batch_size=32,
         batch_size_type: str = "sample",
@@ -100,6 +103,7 @@ class Trainer:
         self.epochs = epochs
         self.num_warmup_updates = num_warmup_updates
         self.save_per_updates = save_per_updates
+        self.samples_per_updates = samples_per_updates 
         self.last_per_steps = default(last_per_steps, save_per_updates * grad_accumulation_steps)
         self.checkpoint_path = default(checkpoint_path, "ckpts/test_e2-tts")
 
@@ -323,27 +327,31 @@ class Trainer:
                 if global_step % (self.save_per_updates * self.grad_accumulation_steps) == 0:
                     self.save_checkpoint(global_step)
 
-                    if self.log_samples and self.accelerator.is_local_main_process:
-                        ref_audio, ref_audio_len = vocoder.decode(batch["mel"][0].unsqueeze(0)), mel_lengths[0]
-                        torchaudio.save(
-                            f"{log_samples_path}/step_{global_step}_ref.wav", ref_audio.cpu(), target_sample_rate
+                if global_step % self.samples_per_updates == 0 and self.log_samples and self.accelerator.is_local_main_process:
+                    ref_audio, ref_audio_len = vocoder.decode(batch["mel"][0].unsqueeze(0)), mel_lengths[0]
+                    torchaudio.save(
+                        f"{log_samples_path}/step_{global_step}_ref.wav", ref_audio.cpu(), target_sample_rate
+                    )
+                    with torch.inference_mode():
+                        generated, _ = self.accelerator.unwrap_model(self.model).sample(
+                            cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
+                            text=[text_inputs[0] + " " + "ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги"],
+                            duration=6000, #ref_audio_len * 2,
+                            #text=[text_inputs[0] + " " + text_inputs[0]], # worked
+                            #text=[text_inputs[0] + [" "] + text_inputs[0]],
+                            #duration= ref_audio_len * 2,
+                            max_duration=6000,
+                            steps=nfe_step,
+                            cfg_strength=cfg_strength,
+                            sway_sampling_coef=sway_sampling_coef,
                         )
-                        with torch.inference_mode():
-                            generated, _ = self.accelerator.unwrap_model(self.model).sample(
-                                cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
-                                text=[text_inputs[0] + [" "] + text_inputs[0]],
-                                duration=ref_audio_len * 2,
-                                steps=nfe_step,
-                                cfg_strength=cfg_strength,
-                                sway_sampling_coef=sway_sampling_coef,
-                            )
-                        generated = generated.to(torch.float32)
-                        gen_audio = vocoder.decode(
-                            generated[:, ref_audio_len:, :].permute(0, 2, 1).to(self.accelerator.device)
-                        )
-                        torchaudio.save(
-                            f"{log_samples_path}/step_{global_step}_gen.wav", gen_audio.cpu(), target_sample_rate
-                        )
+                    generated = generated.to(torch.float32)
+                    gen_audio = vocoder.decode(
+                        generated[:, ref_audio_len:, :].permute(0, 2, 1).to(self.accelerator.device)
+                    )
+                    torchaudio.save(
+                        f"{log_samples_path}/step_{global_step}_gen.wav", gen_audio.cpu(), target_sample_rate
+                    )
 
                 if global_step % self.last_per_steps == 0:
                     self.save_checkpoint(global_step, last=True)
