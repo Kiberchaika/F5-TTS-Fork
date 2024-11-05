@@ -29,3 +29,4 @@ wandb
 x_transformers
 zhconv
 zhon
+tensorboard

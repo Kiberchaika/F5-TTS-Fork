@@ -5,8 +5,8 @@
             "name": "F5-TTS Russian Finetune",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "/home/k4/Python/F5-TTS/src",
-            "program": "finetune_cli.py",
+            "cwd": "${workspaceFolder}/src",
+            "program": "finetune_russian_singing.py",
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
@@ -37,8 +37,8 @@
             "name": "F5-TTS Russian Finetune 2",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "/home/k4/Python/F5-TTS/src",
-            "program": "finetune_cli.py",
+            "cwd": "${workspaceFolder}/src",
+            "program": "finetune_russian_singing.py",
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
