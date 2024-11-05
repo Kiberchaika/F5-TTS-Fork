@@ -210,13 +210,13 @@ class RussianSingingDataset(Dataset):
         return (self.max_duration * self.target_sample_rate / self.hop_length)
 
     def __len__(self):
-        return (200 * 60 * 60 // self.max_duration) # size of dataset
+        return len(self.json_files) * 4 # (200 * 60 * 60 // self.max_duration) # size of dataset
 
     def __getitem__(self, index):
         # Get random file regardless of index
         
         while True:
-            json_path = random.choice(self.json_files) # index % len(self.json_files) #
+            json_path = self.json_files[index % len(self.json_files)] #random.choice(self.json_files)
 
             total_duration = 0
             
@@ -230,6 +230,7 @@ class RussianSingingDataset(Dataset):
 
             # If total duration is greater than target duration, break
             if total_duration < self.min_duration:
+                index += 1
                 continue
 
             # get filepath from filepath_json with replace .json to .mp3
@@ -265,6 +266,7 @@ class RussianSingingDataset(Dataset):
                 idx += 1
 
             if current_duration > self.max_duration or current_duration < self.min_duration:
+                index += 1
                 continue
 
             texts = [] 
@@ -287,7 +289,6 @@ class RussianSingingDataset(Dataset):
             #torchaudio.save(f'/home/k4/Python/F5-TTS/out.mp3', audio, self.target_sample_rate)
 
             break
-    
 
     
         if self.preprocessed_mel:
@@ -463,3 +464,4 @@ def collate_fn(batch):
         text=text,
         text_lengths=text_lengths,
     )
+
