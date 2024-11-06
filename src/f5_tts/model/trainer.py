@@ -199,7 +199,7 @@ class Trainer:
         gc.collect()
         return step
 
-    def train(self, train_dataset: Dataset, num_workers=16, resumable_with_seed: int = None):
+    def train(self, train_dataset: Dataset, num_workers=16, resumable_with_seed: int = None, finetune=True):
         if self.log_samples:
             from f5_tts.infer.utils_infer import cfg_strength, load_vocoder, nfe_step, sway_sampling_coef
 
@@ -258,7 +258,10 @@ class Trainer:
         train_dataloader, self.scheduler = self.accelerator.prepare(
             train_dataloader, self.scheduler
         )  # actual steps = 1 gpu steps / gpus
-        start_step = self.load_checkpoint()
+
+        start_step = 0
+        if finetune:
+            start_step = self.load_checkpoint()
         global_step = start_step
 
         if exists(resumable_with_seed):

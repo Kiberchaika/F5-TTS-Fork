@@ -13,8 +13,8 @@
                 "CUDA_VISIBLE_DEVICES": "0"
             } 
         },
-       {
-            "name": "Russian Finetune",
+        {
+            "name": "Finetune",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src",
@@ -38,11 +38,44 @@
                 "--samples_per_updates", "500", 
                 "--last_per_steps", "2000",
                 "--dataset_name", "russian_dataset",
-                "--finetune", "True",
                 "--tokenizer", "custom",
-                "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
                 "--log_samples", "True",
                 "--logger", "tensorboard",
+                "--finetune", "True",
+                "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
+                //"--pretrain", "/home/k4/Python/F5-TTS/ckpts/russian_dataset_/model_28000.pt",
+            ]
+        },
+        {
+            "name": "Train",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "finetune_russian_singing.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "--exp_name", "F5TTS_Base",
+                "--learning_rate", "0.0001",
+                "--batch_size_per_gpu", "2",  // 3200
+                "--batch_size_type", "sample",
+                "--max_samples", "64",
+                "--grad_accumulation_steps", "2",
+                "--max_grad_norm", "1",
+                "--epochs", "10000",
+                "--num_warmup_updates", "500",
+                "--save_per_updates", "500",
+                "--samples_per_updates", "500", 
+                "--last_per_steps", "2000",
+                "--dataset_name", "russian_dataset",
+                "--tokenizer", "custom",
+                "--log_samples", "True",
+                "--logger", "tensorboard",
+                "--finetune", "False",
+                "--tokenizer_path", "../data/russian_dataset_custom/vocab_clean.txt",
                 //"--pretrain", "/home/k4/Python/F5-TTS/ckpts/russian_dataset_/model_28000.pt",
             ]
         },
