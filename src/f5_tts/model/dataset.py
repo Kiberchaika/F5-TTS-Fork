@@ -17,7 +17,8 @@ from f5_tts.model.utils import default
 from typing import List, Dict
 import os
 import json
-
+import cyrtranslit
+ 
 class HFDataset(Dataset):
     def __init__(
         self,
@@ -273,7 +274,9 @@ class RussianSingingDataset(Dataset):
             audio = []
             for i in range(start_idx, idx):
                 segment = segments[i]
-                texts.append(segment['text'])
+
+                text = cyrtranslit.to_latin(segment['text'], "ru").lower()
+                texts.append(text)
 
                 # get segment from audio segment['start'] in ms to audio position
                 audio.append(input_audio[0][int(segment['start'] * self.target_sample_rate) : int(segment['end'] * self.target_sample_rate)]) 

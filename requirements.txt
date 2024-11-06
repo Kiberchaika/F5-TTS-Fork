@@ -30,3 +30,4 @@ x_transformers
 zhconv
 zhon
 tensorboard
+cyrtranslit

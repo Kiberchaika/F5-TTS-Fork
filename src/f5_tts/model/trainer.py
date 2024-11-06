@@ -22,6 +22,17 @@ from f5_tts.model.utils import default, exists
 
 # trainer
 
+import numpy as np
+import random
+import cyrtranslit
+ 
+def set_seed(seed=1234):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 class Trainer:
     def __init__(
@@ -336,9 +347,14 @@ class Trainer:
                         f"{log_samples_path}/step_{global_step}_ref.wav", ref_audio.cpu(), target_sample_rate
                     )
                     with torch.inference_mode():
+                        sample = train_dataset[0]
+                        set_seed(1234)
+                        generator.manual_seed(1234)
                         generated, _ = self.accelerator.unwrap_model(self.model).sample(
-                            cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
-                            text=[text_inputs[0] + " " + "ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги"],
+                            #cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
+                            cond=sample['mel_spec'][:ref_audio_len].unsqueeze(0).permute(0, 2, 1).cuda(),
+                            text=[cyrtranslit.to_latin("ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги", "ru").lower()],
+                            #text=[text_inputs[0] + " " + "ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги"],
                             duration=6000, #ref_audio_len * 2,
                             #text=[text_inputs[0] + " " + text_inputs[0]], # worked
                             #text=[text_inputs[0] + [" "] + text_inputs[0]],
@@ -347,6 +363,7 @@ class Trainer:
                             steps=nfe_step,
                             cfg_strength=cfg_strength,
                             sway_sampling_coef=sway_sampling_coef,
+                            no_ref_audio = True,
                         )
                     generated = generated.to(torch.float32)
                     gen_audio = vocoder.decode(
