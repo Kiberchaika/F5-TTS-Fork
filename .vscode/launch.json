@@ -47,7 +47,7 @@
             ]
         },
         {
-            "name": "Train",
+            "name": "Train from scratch",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/src",
@@ -74,7 +74,7 @@
                 "--tokenizer", "custom",
                 "--log_samples", "True",
                 "--logger", "tensorboard",
-                "--finetune", "False",
+                "--finetune", "", // false
                 "--tokenizer_path", "../data/russian_dataset_custom/vocab_clean.txt",
                 //"--pretrain", "/home/k4/Python/F5-TTS/ckpts/russian_dataset_/model_28000.pt",
             ]
