@@ -19,7 +19,10 @@ from tqdm import tqdm
 from f5_tts.model import CFM
 from f5_tts.model.dataset import DynamicBatchSampler, collate_fn
 from f5_tts.model.utils import default, exists
-
+from f5_tts.model.utils import (
+    get_tokenizer,
+    convert_char_to_pinyin,
+)
 # trainer
 
 import numpy as np
@@ -33,6 +36,11 @@ def set_seed(seed=1234):
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
     random.seed(seed)
+
+def flatten_list(nested_list):
+    # Convert nested list format to flat list
+    return [item[0] for item in nested_list]
+
 
 class Trainer:
     def __init__(
@@ -347,26 +355,32 @@ class Trainer:
                         f"{log_samples_path}/step_{global_step}_ref.wav", ref_audio.cpu(), target_sample_rate
                     )
                     with torch.inference_mode():
-                        sample = train_dataset[0]
-                        set_seed(1234)
-                        generator.manual_seed(1234)
+                        sample = train_dataset[100]
+                        set_seed(100)
+                        generator.manual_seed(100)
+                        duration = 4000
+
+                        text = convert_char_to_pinyin([cyrtranslit.to_latin("ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги", "ru").lower()])
+                        text = [text_inputs[0] + [' '] + flatten_list(text[0])]
+
                         generated, _ = self.accelerator.unwrap_model(self.model).sample(
-                            #cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
-                            cond=sample['mel_spec'][:ref_audio_len].unsqueeze(0).permute(0, 2, 1).cuda(),
-                            text=[cyrtranslit.to_latin("ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги", "ru").lower()],
+                            cond=mel_spec[0][:ref_audio_len].unsqueeze(0),
+                            #cond=sample['mel_spec'][:ref_audio_len].unsqueeze(0).permute(0, 2, 1).cuda(),
+                            text=text,
                             #text=[text_inputs[0] + " " + "ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги"],
-                            duration=6000, #ref_audio_len * 2,
+                            duration=duration, #ref_audio_len * 2,
                             #text=[text_inputs[0] + " " + text_inputs[0]], # worked
                             #text=[text_inputs[0] + [" "] + text_inputs[0]],
                             #duration= ref_audio_len * 2,
-                            max_duration=6000,
+                            max_duration=duration,
                             steps=nfe_step,
                             cfg_strength=cfg_strength,
                             sway_sampling_coef=sway_sampling_coef,
-                            no_ref_audio = True,
+                            #no_ref_audio = True,
                         )
                     generated = generated.to(torch.float32)
                     gen_audio = vocoder.decode(
+                        #generated[:, 0:, :].permute(0, 2, 1).to(self.accelerator.device)
                         generated[:, ref_audio_len:, :].permute(0, 2, 1).to(self.accelerator.device)
                     )
                     torchaudio.save(

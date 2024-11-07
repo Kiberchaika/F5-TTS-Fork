@@ -13,6 +13,10 @@ from tqdm import tqdm
 
 from f5_tts.model.modules import MelSpec
 from f5_tts.model.utils import default
+from f5_tts.model.utils import (
+    get_tokenizer,
+    convert_char_to_pinyin,
+)
 
 from typing import List, Dict
 import os
@@ -282,7 +286,8 @@ class RussianSingingDataset(Dataset):
                 audio.append(input_audio[0][int(segment['start'] * self.target_sample_rate) : int(segment['end'] * self.target_sample_rate)]) 
 
             text = ' '.join(texts).replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').strip().lower()   
-          
+            text = convert_char_to_pinyin([text], polyphone=True)[0]
+        
             audio = torch.cat(audio, dim=0)
             if audio.shape[0] < self.max_duration * self.target_sample_rate:
                 audio = torch.cat([audio, torch.zeros(self.max_duration * self.target_sample_rate - audio.shape[0])], dim=0)
