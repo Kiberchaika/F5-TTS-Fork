@@ -358,7 +358,7 @@ class Trainer:
                         sample = train_dataset[100]
                         set_seed(100)
                         generator.manual_seed(100)
-                        duration = 4000
+                        duration = ref_audio_len + 3000
 
                         text = convert_char_to_pinyin([cyrtranslit.to_latin("ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги", "ru").lower()])
                         text = [text_inputs[0] + [' '] + flatten_list(text[0])]
