@@ -34,7 +34,7 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
-                "CUDA_VISIBLE_DEVICES": "1"
+                "CUDA_VISIBLE_DEVICES": "0"
             },
             "args": [
                 "--exp_name", "F5TTS_Base",
@@ -48,16 +48,17 @@
                 "--num_warmup_updates", "500",
                 "--save_per_updates", "500",
                 "--samples_per_updates", "500", 
-                "--last_per_steps", "2000",
-                "--dataset_name", "russian_dataset_ft",
+                "--last_per_steps", "1000",
+                "--dataset_name", "russian_dataset_ft1",
                 "--tokenizer", "pinyin", // "custom",
                 "--log_samples", "True",
                 "--logger", "tensorboard",
                 "--finetune", "True",
                 "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
-                "--pretrain", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_48000.pt",
+                "--pretrain", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_last.pt",
             ]
         }, 
+        
         {
             "name": "Inference",
             "type": "debugpy",
@@ -67,13 +68,51 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
-                "CUDA_VISIBLE_DEVICES": "1"
+                "CUDA_VISIBLE_DEVICES": "0"
             },
             "args": [
                 "--model", "F5-TTS", 
-                "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft/model_57000.pt", 
+                "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_last.pt", 
                 "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/basic_ref_en.wav", 
                 "--ref_text", "The content, subtitle or transcription of reference audio.", 
+                "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
+            ]
+        },
+        {
+            "name": "Inference 1",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "infer_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "--model", "F5-TTS", 
+                "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_last.pt", 
+                "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/ru_ref_1.wav", 
+                "--ref_text", "kogda ujdu v kraja otkuda net dorog.", 
+                "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
+            ]
+        },
+        {
+            "name": "Inference 2",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "infer_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "--model", "F5-TTS", 
+                "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_last.pt", 
+                "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/ru_ref_2.wav", 
+                "--ref_text", "menja terzaet do utra sne obidy i strah.", 
                 "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
             ]
         },
