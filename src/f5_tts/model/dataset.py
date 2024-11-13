@@ -282,6 +282,8 @@ class RussianSingingDataset(Dataset):
                 text = cyrtranslit.to_latin(segment['text'], "ru").lower()
                 texts.append(text)
 
+                # todo: если пропуск больше 5сек то пропускаем сэмпл
+
                 # get segment from audio segment['start'] in ms to audio position
                 audio.append(input_audio[0][int(segment['start'] * self.target_sample_rate) : int(segment['end'] * self.target_sample_rate)]) 
 

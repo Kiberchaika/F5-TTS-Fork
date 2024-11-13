@@ -19,7 +19,7 @@ rm -rf /home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft
     --batch_size_per_gpu 2 \
     --batch_size_type sample \
     --max_samples 64 \
-    --grad_accumulation_steps 2 \
+    --grad_accumulation_steps 6 \
     --max_grad_norm 1 \
     --epochs 10000 \
     --num_warmup_updates 500 \

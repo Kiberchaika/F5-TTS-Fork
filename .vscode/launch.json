@@ -34,7 +34,7 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
-                "CUDA_VISIBLE_DEVICES": "0"
+                "CUDA_VISIBLE_DEVICES": "1"
             },
             "args": [
                 "--exp_name", "F5TTS_Base",
@@ -42,7 +42,7 @@
                 "--batch_size_per_gpu", "2",  // 3200
                 "--batch_size_type", "sample",
                 "--max_samples", "64",
-                "--grad_accumulation_steps", "2",
+                "--grad_accumulation_steps", "6",//"2",
                 "--max_grad_norm", "1",
                 "--epochs", "10000",
                 "--num_warmup_updates", "500",
