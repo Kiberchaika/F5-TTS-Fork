@@ -167,6 +167,19 @@ class Trainer:
             else:
                 self.accelerator.save(checkpoint, f"{self.checkpoint_path}/model_{step}.pt")
 
+    def save_checkpoint_backup(self, step, checkpoint_path):
+        self.accelerator.wait_for_everyone()
+        if self.is_main:
+            checkpoint = dict(
+                model_state_dict=self.accelerator.unwrap_model(self.model).state_dict(),
+                optimizer_state_dict=self.accelerator.unwrap_model(self.optimizer).state_dict(),
+                ema_model_state_dict=self.ema_model.state_dict(),
+                scheduler_state_dict=self.scheduler.state_dict(),
+                step=step,
+            )
+            self.accelerator.save(checkpoint, f"{checkpoint_path}/model_last.pt")
+            print(f"Saved checkpoint at step {step}")
+
     def load_checkpoint(self):
         if (
             not exists(self.checkpoint_path)
@@ -347,18 +360,20 @@ class Trainer:
                 progress_bar.set_postfix(step=str(global_step), loss=loss.item())
 
                 if global_step % (self.save_per_updates * self.grad_accumulation_steps) == 0:
-                    self.save_checkpoint(global_step)
+                    #self.save_checkpoint(global_step)
 
-                if global_step % self.samples_per_updates == 0 and self.log_samples and self.accelerator.is_local_main_process:
+                    self.save_checkpoint_backup(global_step, "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin")
+
+                if False:#global_step % self.samples_per_updates == 0 and self.log_samples and self.accelerator.is_local_main_process:
                     ref_audio, ref_audio_len = vocoder.decode(batch["mel"][0].unsqueeze(0)), mel_lengths[0]
                     torchaudio.save(
                         f"{log_samples_path}/step_{global_step}_ref.wav", ref_audio.cpu(), target_sample_rate
                     )
                     with torch.inference_mode():
-                        sample = train_dataset[100]
-                        set_seed(100)
-                        generator.manual_seed(100)
-                        duration = 4000
+                        #sample = train_dataset[100]
+                        #set_seed(100)
+                        #generator.manual_seed(100)
+                        duration = ref_audio_len + 3000
 
                         text = convert_char_to_pinyin([cyrtranslit.to_latin("ничего на свете лучше нету, чем бродить друзьям по белу свету. тем, кто дружен, не страшны тревоги. нам любые дороги дороги", "ru").lower()])
                         text = [text_inputs[0] + [' '] + flatten_list(text[0])]
@@ -387,8 +402,10 @@ class Trainer:
                         f"{log_samples_path}/step_{global_step}_gen.wav", gen_audio.cpu(), target_sample_rate
                     )
 
-                if global_step % self.last_per_steps == 0:
-                    self.save_checkpoint(global_step, last=True)
+                #if global_step % self.last_per_steps == 0:
+                #    self.save_checkpoint(global_step, last=True)
+
+                
 
         self.save_checkpoint(global_step, last=True)
 
