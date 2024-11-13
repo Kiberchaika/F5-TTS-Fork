@@ -160,7 +160,7 @@ class CustomDataset(Dataset):
 
         return dict(
             mel_spec=mel_spec,
-            text=text,
+            text=cyrtranslit.to_latin(text, "ru").lower(),
         )
 
 
@@ -393,7 +393,7 @@ def load_dataset(
     print("Loading dataset ...")
 
     if dataset_type == "CustomDataset":
-        rel_data_path = str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
+        rel_data_path = "/mnt/datasets/radio_2_processed" # str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
         if audio_type == "raw":
             try:
                 train_dataset = load_from_disk(f"{rel_data_path}/raw")
