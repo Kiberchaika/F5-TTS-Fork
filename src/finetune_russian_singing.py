@@ -65,7 +65,6 @@ def parse_args():
 
     return parser.parse_args()
 
-
 # -------------------------- Training Settings -------------------------- #
 
 
@@ -155,6 +154,7 @@ def main():
         train_dataset,
         resumable_with_seed=666,  # seed for shuffling dataset
         finetune=args.finetune,
+        num_workers=8,
     )
 
 

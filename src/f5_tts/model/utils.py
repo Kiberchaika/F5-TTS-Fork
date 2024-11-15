@@ -109,7 +109,7 @@ def get_tokenizer(dataset_name, tokenizer: str = "pinyin"):
                 - if use "byte", set to 256 (unicode byte range)
     """
     if tokenizer in ["pinyin", "char"]:
-        tokenizer_path = "/mnt/datasets/radio_2_processed/vocab.txt"
+        tokenizer_path = "/home/k4/Python/F5-TTS-Fork/data/Emilia_ZH_EN_pinyin/vocab.txt"
         with open(tokenizer_path, "r", encoding="utf-8") as f:
             vocab_char_map = {}
             for i, char in enumerate(f):

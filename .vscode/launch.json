@@ -59,6 +59,39 @@
             ]
         }, 
         {
+            "name": "Finetune E2",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "finetune_russian_singing.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
+            "args": [
+                "--exp_name", "E2TTS_Base",
+                "--learning_rate", "0.00005",
+                "--batch_size_per_gpu", "2",  // 3200
+                "--batch_size_type", "sample",
+                "--max_samples", "64",
+                "--grad_accumulation_steps", "2",//"2",
+                "--max_grad_norm", "1",
+                "--epochs", "10000",
+                "--num_warmup_updates", "500",
+                "--save_per_updates", "500",
+                "--samples_per_updates", "500", 
+                "--last_per_steps", "1000",
+                "--dataset_name", "russian_dataset_ft_translit_pinyin_e2",
+                "--tokenizer", "pinyin", // "custom",
+                "--log_samples", "True",
+                "--logger", "tensorboard",
+                "--finetune", "True",
+                "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
+                "--pretrain", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin_e2/model_last.pt",
+            ]
+        }, 
+        {
             "name": "Finetune Open STT",
             "type": "debugpy",
             "request": "launch",
@@ -105,6 +138,25 @@
             "args": [
                 "--model", "F5-TTS", 
                 "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin/model_last.pt", 
+                "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/basic_ref_en.wav", 
+                "--ref_text", "The content, subtitle or transcription of reference audio.", 
+                "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
+            ]
+        },
+        {
+            "name": "Inference E2",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "infer_cli.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+                "--model", "E2-TTS", 
+                "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin_e2/model_last.pt", 
                 "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/basic_ref_en.wav", 
                 "--ref_text", "The content, subtitle or transcription of reference audio.", 
                 "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 

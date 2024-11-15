@@ -252,7 +252,10 @@ class Trainer:
                 collate_fn=collate_fn,
                 num_workers=num_workers,
                 pin_memory=True,
-                persistent_workers=True,
+                prefetch_factor = 2,#
+                drop_last=True,#
+                timeout=120, #
+                persistent_workers=num_workers > 0,
                 batch_size=self.batch_size,
                 shuffle=True,
                 generator=generator,
@@ -268,7 +271,7 @@ class Trainer:
                 collate_fn=collate_fn,
                 num_workers=num_workers,
                 pin_memory=True,
-                persistent_workers=True,
+                persistent_workers=num_workers > 0,
                 batch_sampler=batch_sampler,
             )
         else:
@@ -358,11 +361,11 @@ class Trainer:
                         self.writer.add_scalar("lr", self.scheduler.get_last_lr()[0], global_step)
 
                 progress_bar.set_postfix(step=str(global_step), loss=loss.item())
-
                 if global_step % (self.save_per_updates * self.grad_accumulation_steps) == 0:
                     #self.save_checkpoint(global_step)
 
-                    self.save_checkpoint_backup(global_step, "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin")
+                    self.save_checkpoint_backup(global_step, "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin_e2")
+                    exit() 
 
                 if False:#global_step % self.samples_per_updates == 0 and self.log_samples and self.accelerator.is_local_main_process:
                     ref_audio, ref_audio_len = vocoder.decode(batch["mel"][0].unsqueeze(0)), mel_lengths[0]
@@ -405,7 +408,7 @@ class Trainer:
                 #if global_step % self.last_per_steps == 0:
                 #    self.save_checkpoint(global_step, last=True)
 
-                
+   
 
         self.save_checkpoint(global_step, last=True)
 
