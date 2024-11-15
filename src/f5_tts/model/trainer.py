@@ -252,9 +252,9 @@ class Trainer:
                 collate_fn=collate_fn,
                 num_workers=num_workers,
                 pin_memory=True,
-                prefetch_factor = 2,#
+                #prefetch_factor = 2,#
                 drop_last=True,#
-                timeout=120, #
+                #timeout=120, #
                 persistent_workers=num_workers > 0,
                 batch_size=self.batch_size,
                 shuffle=True,

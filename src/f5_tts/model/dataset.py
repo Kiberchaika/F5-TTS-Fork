@@ -155,16 +155,16 @@ class CustomDataset(Dataset):
         text = row["text"]
         duration = row["duration"]
 
+        if duration > 50 or duration < 0.3:
+            return self.__getitem__((index + 1) % len(self.data))
+
         if self.preprocessed_mel:
             mel_spec = torch.tensor(row["mel_spec"])
-
         else:
-            audio, source_sample_rate = torchaudio.load(audio_path)
+            data_path = "/root/Music_stretched_dataset"
+            audio, source_sample_rate = torchaudio.load(os.path.join(data_path, audio_path))
             if audio.shape[0] > 1:
                 audio = torch.mean(audio, dim=0, keepdim=True)
-
-            if duration > 30 or duration < 0.3:
-                return self.__getitem__((index + 1) % len(self.data))
 
             if source_sample_rate != self.target_sample_rate:
                 resampler = torchaudio.transforms.Resample(source_sample_rate, self.target_sample_rate)
@@ -173,9 +173,13 @@ class CustomDataset(Dataset):
             mel_spec = self.mel_spectrogram(audio)
             mel_spec = mel_spec.squeeze(0)  # '1 d t -> d t')
 
+            text = cyrtranslit.to_latin(text, "ru").lower()
+            text = text.replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').strip().lower()  
+            text = convert_char_to_pinyin([text], polyphone=True)[0]
+
         return dict(
             mel_spec=mel_spec,
-            text=cyrtranslit.to_latin(text, "ru").lower(),
+            text=text,
         )
 
 
@@ -545,7 +549,7 @@ def load_dataset(
     print("Loading dataset ...")
 
     if dataset_type == "CustomDataset":
-        rel_data_path = "/mnt/datasets/radio_2_processed" # str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
+        rel_data_path = "/root/Vocal_Dereverb_Prepared" # str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
         if audio_type == "raw":
             try:
                 train_dataset = load_from_disk(f"{rel_data_path}/raw")
@@ -574,6 +578,9 @@ def load_dataset(
         )
 
     elif dataset_type == "CustomDatasetPath":
+        dataset_name = "/root/Vocal_Dereverb_Prepared"
+        preprocessed_mel = False
+
         try:
             train_dataset = load_from_disk(f"{dataset_name}/raw")
         except:  # noqa: E722
