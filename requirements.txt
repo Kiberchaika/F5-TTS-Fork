@@ -31,3 +31,7 @@ zhconv
 zhon
 tensorboard
 cyrtranslit
+nltk
+pandas 
+faster-whisper
+pyannote.audio
