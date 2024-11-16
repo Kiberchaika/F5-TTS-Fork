@@ -485,6 +485,101 @@ def infer_batch_process(
 
     return final_wave, target_sample_rate, combined_spectrogram
 
+def infer_single_process(
+    ref_audio,
+    ref_text,
+    gen_text,
+    model_obj,
+    vocoder,
+    mel_spec_type="vocos",
+    progress=tqdm,
+    target_rms=0.1,
+    nfe_step=32,
+    cfg_strength=2.0,
+    sway_sampling_coef=-1,
+    speed=1,
+    fix_duration=None,
+    device=None,
+    start_step=0,
+    end_step=0,
+    initial_state=None,
+    seed=None,  # Add seed parameter
+):
+    """Inference process for a single text input without batching."""
+    # Get device and dtype from model
+    if device is None:
+        device = next(model_obj.parameters()).device
+    dtype = next(model_obj.parameters()).dtype
+        
+    audio, sr = torchaudio.load(ref_audio)
+    if audio.shape[0] > 1:
+        audio = torch.mean(audio, dim=0, keepdim=True)
+
+    # Move audio to correct device and use float32 for resampling operations
+    audio = audio.to(device=device, dtype=torch.float32)
+
+    rms = torch.sqrt(torch.mean(torch.square(audio)))
+    if rms < target_rms:
+        audio = audio * target_rms / rms
+        
+    # Resample if needed - keep in float32 for this operation
+    if sr != target_sample_rate:
+        resampler = torchaudio.transforms.Resample(sr, target_sample_rate)
+        resampler = resampler.to(device)
+        audio = resampler(audio)
+    
+    # Now convert to model's dtype after resampling
+    audio = audio.to(dtype=dtype)
+
+    # Rest of the preprocessing...
+    text_list = [ref_text + gen_text]
+    final_text_list = convert_char_to_pinyin(text_list)
+
+    ref_audio_len = audio.shape[-1] // hop_length
+    if fix_duration is not None:
+        duration = int(fix_duration * target_sample_rate / hop_length)
+    else:
+        ref_text_len = len(ref_text.encode("utf-8"))
+        gen_text_len = len(gen_text.encode("utf-8"))
+        duration = ref_audio_len + int(ref_audio_len / ref_text_len * gen_text_len / speed)
+
+    # inference
+    with torch.inference_mode():
+        generated, trajectory = model_obj.sample(
+            cond=audio,
+            text=final_text_list,
+            duration=duration,
+            steps=nfe_step,
+            cfg_strength=cfg_strength,
+            sway_sampling_coef=sway_sampling_coef,
+            device=device,
+            dtype=dtype,
+            start_step=start_step,
+            end_step=end_step,
+            initial_state=initial_state,
+            seed=seed,  # Pass seed to sample function
+        )
+
+        generated = generated.to(torch.float32)  # Convert to float32 for vocoder
+        generated = generated[:, ref_audio_len:, :]
+        generated_mel_spec = generated.permute(0, 2, 1)
+        
+        # Ensure vocoder is on correct device
+        if not hasattr(vocoder, 'device') or vocoder.device != device:
+            vocoder = vocoder.to(device)
+            
+        if mel_spec_type == "vocos":
+            generated_wave = vocoder.decode(generated_mel_spec)
+        elif mel_spec_type == "bigvgan":
+            generated_wave = vocoder(generated_mel_spec)
+        if rms < target_rms:
+            generated_wave = generated_wave * rms / target_rms
+
+        # wav -> numpy
+        final_wave = generated_wave.squeeze().cpu().numpy()
+
+    return final_wave, target_sample_rate, generated_mel_spec[0].cpu().numpy(), trajectory.cpu()
+
 
 # remove silence from generated wav
 
