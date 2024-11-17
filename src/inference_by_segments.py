@@ -12,6 +12,7 @@ import soundfile as sf
 import tomli
 import librosa
 import random
+import cyrtranslit
 
 from f5_tts.infer.utils_infer import (
     infer_single_process,
@@ -104,8 +105,10 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
     sf.write("ref.mp3", audio_cut, sr, format='mp3')
 
     # Set ref text and cutted audio
-    ref_text = words + " "
+    ref_text = cyrtranslit.to_latin(words + " ", "ru").lower()
     ref_audio = "ref.mp3"
+
+    gen_text = cyrtranslit.to_latin(gen_text, "ru").lower()
 
     # Preprocess reference audio/text once
     ref_audio_preprocessed, ref_text_preprocessed = ref_audio, ref_text
@@ -122,7 +125,7 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
 
         max_score = -1
 
-        for j in range(10):
+        for j in range(8):
 
             # First stage - generate first 16 steps
             first_audio, sr, _, first_trajectory = infer_single_process(
@@ -179,7 +182,9 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
         audio_segments.append(segment_audio)
     
         # Save first stage audio
-        segment_wave_path = Path(output_dir) / f"segment_audio_{i}.mp3" 
+        out_dir = Path(output_dir) 
+        out_dir.mkdir(exist_ok=True, parents=True)
+        segment_wave_path = out_dir / f"segment_audio_{i}.mp3" 
         print(segment_wave_path)
         sf.write(segment_wave_path, segment_audio, sr)
 
