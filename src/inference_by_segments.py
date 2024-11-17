@@ -1,12 +1,7 @@
 from __future__ import annotations
 
 import sys
-sys.path.append('src')
-
 import torch
-
-import torch
-
 import os
 import re
 from importlib.resources import files
@@ -91,7 +86,7 @@ ckpt_file = "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyi
 ema_model_fine = load_model(model_cls, model_cfg, ckpt_file, mel_spec_type=vocoder_name, vocab_file=vocab_file)
 
 
-def generate(ref_track_name, gen_text, final_path):  
+def inference_by_segments(ref_track_name, gen_text, final_path):  
 
     ref_track = base_ref_tracks[ref_track_name]
     mp3_path = ref_track['sections'][0]['mp3_path']
@@ -181,7 +176,6 @@ def generate(ref_track_name, gen_text, final_path):
             sf.write(segment_wave_path, second_audio, sr)
             '''
 
-
         audio_segments.append(segment_audio)
     
         # Save first stage audio
@@ -207,4 +201,4 @@ if __name__ == '__main__':
 
     final_path = Path(output_dir) / "out.mp3"
  
-    generate(ref_track_name, gen_text, final_path)
+    inference_by_segments(ref_track_name, gen_text, final_path)
