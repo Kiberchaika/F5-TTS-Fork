@@ -90,14 +90,17 @@ ema_model_fine = load_model(model_cls, model_cfg, ckpt_file, mel_spec_type=vocod
 def inference_by_segments(ref_track_name, gen_text, final_path):  
 
     ref_track = base_ref_tracks[ref_track_name]
-    mp3_path = ref_track['sections'][0]['mp3_path']
-    words = ref_track['sections'][0]['words']
-    end_time = ref_track['sections'][0]['end_time']
+
+    section = random.choice(ref_track['sections'])
+
+    mp3_path = section['mp3_path']
+    words = section['words']
+    end_time = section['end_time']
 
     # Parameters for experiment
-    split_step = 8 # Split at step  
+    split_step = 4 # Split at step  
     steps = 32 # Steps for generation
-    speed = 0.9
+    speed = 1.0
 
     # Open and cut the audio from ref
     audio, sr = librosa.load(mp3_path, sr=None)  
@@ -108,11 +111,8 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
     ref_text = cyrtranslit.to_latin(words + " ", "ru").lower()
     ref_audio = "ref.mp3"
 
-    gen_text = cyrtranslit.to_latin(gen_text, "ru").lower()
-
     # Preprocess reference audio/text once
     ref_audio_preprocessed, ref_text_preprocessed = ref_audio, ref_text
-
 
     splitted_text = split_text(gen_text)
     audio_segments  = []
@@ -121,11 +121,14 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
         print(text)
 
         ref_audio_preprocessed, ref_text_preprocessed = preprocess_ref_audio_text_segment( ref_audio, ref_text)
-        text = text.lower() + " "
+        text = cyrtranslit.to_latin(gen_text, "ru").lower() + " "
 
         max_score = -1
 
-        for j in range(8):
+        for j in range(30):
+
+            # Randomize speed
+            speed = 0.3 + 0.7 * torch.rand(1)
 
             # First stage - generate first 16 steps
             first_audio, sr, _, first_trajectory = infer_single_process(
