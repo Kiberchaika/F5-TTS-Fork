@@ -237,7 +237,7 @@ def remove_silence_edges(audio, silence_threshold=-42):
 # preprocess reference audio and text
 
 
-def preprocess_ref_audio_text(ref_audio_orig, ref_text, clip_short=True, show_info=print, device=device):
+def preprocess_ref_audio_text(ref_audio_orig, ref_text, clip_short=True, show_info=print, device=device, bypass_cache=False):
     show_info("Converting audio...")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
         aseg = AudioSegment.from_file(ref_audio_orig)
@@ -283,7 +283,7 @@ def preprocess_ref_audio_text(ref_audio_orig, ref_text, clip_short=True, show_in
         audio_hash = hashlib.md5(audio_data).hexdigest()
 
     global _ref_audio_cache
-    if audio_hash in _ref_audio_cache:
+    if audio_hash in _ref_audio_cache and not bypass_cache:
         # Use cached reference text
         show_info("Using cached reference text...")
         ref_text = _ref_audio_cache[audio_hash]
@@ -312,6 +312,55 @@ def preprocess_ref_audio_text(ref_audio_orig, ref_text, clip_short=True, show_in
             ref_text += " "
         else:
             ref_text += ". "
+
+    return ref_audio, ref_text
+
+
+
+
+
+def preprocess_ref_audio_text_segment(ref_audio_orig, ref_text, end_time=None, clip_short=True, show_info=print, device=device, bypass_cache=False):
+    show_info("Converting audio...")
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+        aseg = AudioSegment.from_file(ref_audio_orig)
+
+        if end_time is not None:
+            aseg = aseg[:end_time * 1000]
+
+        if clip_short:
+            # 1. try to find long silence for clipping
+            non_silent_segs = silence.split_on_silence(
+                aseg, min_silence_len=1000, silence_thresh=-50, keep_silence=1000, seek_step=10
+            )
+            non_silent_wave = AudioSegment.silent(duration=0)
+            for non_silent_seg in non_silent_segs:
+                if len(non_silent_wave) > 6000 and len(non_silent_wave + non_silent_seg) > 15000:
+                    show_info("Audio is over 15s, clipping short. (1)")
+                    break
+                non_silent_wave += non_silent_seg
+
+            # 2. try to find short silence for clipping if 1. failed
+            if len(non_silent_wave) > 15000:
+                non_silent_segs = silence.split_on_silence(
+                    aseg, min_silence_len=100, silence_thresh=-40, keep_silence=1000, seek_step=10
+                )
+                non_silent_wave = AudioSegment.silent(duration=0)
+                for non_silent_seg in non_silent_segs:
+                    if len(non_silent_wave) > 6000 and len(non_silent_wave + non_silent_seg) > 15000:
+                        show_info("Audio is over 15s, clipping short. (2)")
+                        break
+                    non_silent_wave += non_silent_seg
+
+            aseg = non_silent_wave
+
+            # 3. if no proper silence found for clipping
+            if len(aseg) > 15000:
+                aseg = aseg[:15000]
+                show_info("Audio is over 15s, clipping short. (3)")
+
+        aseg = remove_silence_edges(aseg) + AudioSegment.silent(duration=1000)
+        aseg.export(f.name, format="wav")
+        ref_audio = f.name
 
     return ref_audio, ref_text
 
@@ -365,9 +414,7 @@ def infer_process(
     )
 
 
-# infer batches
-
-
+# infer batches (old)
 def infer_batch_process(
     ref_audio,
     ref_text,
@@ -579,6 +626,10 @@ def infer_single_process(
         final_wave = generated_wave.squeeze().cpu().numpy()
 
     return final_wave, target_sample_rate, generated_mel_spec[0].cpu().numpy(), trajectory.cpu()
+
+
+
+
 
 
 # remove silence from generated wav

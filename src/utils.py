@@ -101,3 +101,72 @@ def find_matching_filename(filepath):
     except Exception as e:
         print(f"Error processing file: {e}")
         return None
+
+def split_text(text, max_length=132):
+    """
+    Split text into chunks of maximum length while preserving whole words
+    and trying to break at sentence boundaries when possible.
+    
+    Args:
+        text (str): Input text to split
+        max_length (int): Maximum length of each chunk (default: 132)
+    
+    Returns:
+        list: List of text chunks
+    """
+    # First split into sentences
+    sentences = []
+    current = []
+    
+    # Basic sentence splitting on ., !, ?
+    for char in text:
+        current.append(char)
+        if char in '.!?' and len(current) > 0:
+            sentences.append(''.join(current).strip())
+            current = []
+    
+    # Add any remaining text as a sentence
+    if current:
+        sentences.append(''.join(current).strip())
+    
+    chunks = []
+    current_chunk = []
+    current_length = 0
+    
+    for sentence in sentences:
+        # If single sentence is longer than max_length, need to split on words
+        if len(sentence) > max_length:
+            words = sentence.split()
+            for word in words:
+                # If adding this word would exceed max_length
+                if current_length + len(word) + 1 > max_length:
+                    # Store current chunk and start new one
+                    if current_chunk:
+                        chunks.append(' '.join(current_chunk))
+                    current_chunk = [word]
+                    current_length = len(word)
+                else:
+                    current_chunk.append(word)
+                    current_length += len(word) + 1  # +1 for space
+        
+        # If whole sentence fits within remainder of current chunk
+        elif current_length + len(sentence) <= max_length:
+            if current_chunk:
+                current_chunk.append(sentence)
+                current_length += len(sentence) + 1
+            else:
+                current_chunk = [sentence]
+                current_length = len(sentence)
+        
+        # If sentence doesn't fit, store current chunk and start new with this sentence
+        else:
+            if current_chunk:
+                chunks.append(' '.join(current_chunk))
+            current_chunk = [sentence]
+            current_length = len(sentence)
+    
+    # Add final chunk if exists
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks

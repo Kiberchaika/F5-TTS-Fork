@@ -35,3 +35,4 @@ nltk
 pandas 
 faster-whisper
 pyannote.audio
+Levenshtein
