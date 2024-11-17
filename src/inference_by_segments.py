@@ -125,10 +125,10 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
 
         max_score = -1
 
-        for j in range(20):
+        for j in range(8):
 
             # Randomize speed
-            speed = 0.6 + 0.3 * torch.rand(1)
+            # speed = 0.6 + 0.7 * torch.rand(1)
 
             # First stage - generate first 16 steps
             first_audio, sr, _, first_trajectory = infer_single_process(
