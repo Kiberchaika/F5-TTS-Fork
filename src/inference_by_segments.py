@@ -125,7 +125,7 @@ def inference_by_segments(ref_track_name, gen_text, final_path):
 
         max_score = -1
 
-        for j in range(30):
+        for j in range(50):
 
             # Randomize speed
             speed = 0.3 + 0.7 * torch.rand(1)
