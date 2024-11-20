@@ -589,6 +589,8 @@ def infer_single_process(
         ref_text_len = len(ref_text.encode("utf-8"))
         gen_text_len = len(gen_text.encode("utf-8"))
         duration = ref_audio_len + int(ref_audio_len / ref_text_len * gen_text_len / speed)
+    if initial_state is not None:
+        duration = initial_state.shape[1]
 
     # inference
     with torch.inference_mode():

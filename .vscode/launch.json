@@ -59,6 +59,42 @@
             ]
         }, 
         {
+            "name": "Finetune Corse 16nov",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/src",
+            "program": "finetune_russian_singing.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1"
+            },
+            "args": [
+                "--exp_name", "F5TTS_Base",
+                "--learning_rate", "0.00005",
+                "--batch_size_per_gpu", "2",  // 3200
+                "--batch_size_type", "sample",
+                "--max_samples", "64",
+                "--grad_accumulation_steps", "6",//"2",
+                "--max_grad_norm", "1",
+                "--epochs", "10000",
+                "--num_warmup_updates", "500",
+                "--save_per_updates", "500",
+                "--samples_per_updates", "500", 
+                "--last_per_steps", "1000",
+                "--dataset_name", "russian_dataset_ft1",
+                "--tokenizer", "pinyin", // "custom",
+                "--log_samples", "True",
+                "--logger", "tensorboard",
+                "--finetune", "True",
+                "--tokenizer_path", "../data/Emilia_ZH_EN_pinyin/vocab.txt",
+                //"--dataset_type", "RussianSingingDataset",
+                "--audio_type", "raw",
+                "--dataset_type", "CustomDataset",
+                "--pretrain", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_coarse_16nov/model_last.pt",
+            ]
+        },
+        {
             "name": "Finetune E2",
             "type": "debugpy",
             "request": "launch",
@@ -159,7 +195,8 @@
                 "--ckpt_file", "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin_e2/model_last.pt", 
                 "--ref_audio", "/home/k4/Python/F5-TTS-Fork/src/f5_tts/infer/examples/basic/basic_ref_en.wav", 
                 "--ref_text", "The content, subtitle or transcription of reference audio.", 
-                "--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
+                //"--gen_text", "nichego na svete luchshe netu, chem brodit' druz'jam po belu svetu. tem, kto druzhen, ne strashny trevogi. nam ljubye dorogi dorogi" 
+                "--gen_text", "zima-holoda, odinokie doma . morja, goroda — vsjo kak budto izo l'da . no skoro vesna, sneg rastaet i togda . za beloj stenoj my ostanemsja s toboj . . strannye sny neznakomoj vesny. vizhu ja, vidish' ty dnjom i noch'ju opjat'. vstretilis' my posredine zimy. no drug druga s toboj ne mogli ne uznat'. holod nochej, odinochestvo dnej. vse zabyto davno i ushlo v nikuda. budet vdvojom nam namnogo teplej. dazhe esli opjat' za oknom holoda. . o-o-o, vsjo, chto bylo proshlo. snegom sledy navsegda zamelo. . zima-holoda, odinokie doma. morja, goroda — vsjo kak budto izo l'da. no skoro vesna, sneg rastaet i togda. za beloj stenoj my ostanemsja s toboj. . no ne sprjachesh'sja ty v jetom zamke pustom. slyshish' shagi? jeto postup' vesny. jeto znachit, chto skoro my budem vdvojom. "
             ]
         },
         {

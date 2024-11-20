@@ -45,6 +45,8 @@ def parse_args():
     parser.add_argument("--last_per_steps", type=int, default=50000, help="Save last checkpoint every X steps")
     parser.add_argument("--finetune", type=bool, default=True, help="Use Finetune")
     parser.add_argument("--pretrain", type=str, default=None, help="the path to the checkpoint")
+    parser.add_argument("--dataset_type", type=str, default="RussianSingingDataset", help="type of dataset")
+    parser.add_argument("--audio_type", type=str, default="custom", help="dataset audio type")
     parser.add_argument(
         "--tokenizer", type=str, default="pinyin", choices=["pinyin", "char", "custom"], help="Tokenizer type"
     )
@@ -148,7 +150,7 @@ def main():
         last_per_steps=args.last_per_steps,
     )
 
-    train_dataset = load_dataset(args.dataset_name, tokenizer, dataset_type= "RussianSingingDataset", audio_type="custom", mel_spec_kwargs=mel_spec_kwargs)
+    train_dataset = load_dataset(args.dataset_name, tokenizer, dataset_type=args.dataset_type, audio_type=args.audio_type, mel_spec_kwargs=mel_spec_kwargs)
 
     trainer.train(
         train_dataset,

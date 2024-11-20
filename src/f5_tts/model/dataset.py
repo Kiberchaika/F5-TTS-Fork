@@ -161,7 +161,7 @@ class CustomDataset(Dataset):
         if self.preprocessed_mel:
             mel_spec = torch.tensor(row["mel_spec"])
         else:
-            data_path = "/root/Music_stretched_dataset"
+            data_path = "/media/k4_nas/Datasets/Music_RU/Vocal_Dereverb"
             audio, source_sample_rate = torchaudio.load(os.path.join(data_path, audio_path))
             if audio.shape[0] > 1:
                 audio = torch.mean(audio, dim=0, keepdim=True)
@@ -549,7 +549,7 @@ def load_dataset(
     print("Loading dataset ...")
 
     if dataset_type == "CustomDataset":
-        rel_data_path = "/root/Vocal_Dereverb_Prepared" # str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
+        rel_data_path = "/media/k4_nas/Datasets/Music_RU/Vocal_Dereverb_Prepared" # str(files("f5_tts").joinpath(f"../../data/{dataset_name}_{tokenizer}"))
         if audio_type == "raw":
             try:
                 train_dataset = load_from_disk(f"{rel_data_path}/raw")
