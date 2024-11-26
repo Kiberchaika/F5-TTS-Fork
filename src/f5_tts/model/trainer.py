@@ -340,17 +340,21 @@ class Trainer:
                     loss, cond, pred = self.model(
                         mel_spec, text=text_inputs, lens=mel_lengths, noise_scheduler=self.noise_scheduler
                     )
+
+                    #loss = loss / gradient_accumulation_steps
                     self.accelerator.backward(loss)
 
-                    if self.max_grad_norm > 0 and self.accelerator.sync_gradients:
-                        self.accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+                    if True: #global_step % self.grad_accumulation_steps == 0:
+                        if self.max_grad_norm > 0 and self.accelerator.sync_gradients:
+                            self.accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
 
-                    self.optimizer.step()
-                    self.scheduler.step()
-                    self.optimizer.zero_grad()
+                        self.optimizer.step()
+                        self.scheduler.step()
+                        self.optimizer.zero_grad()
 
                 if self.is_main:
-                    self.ema_model.update()
+                    if True: # global_step % self.grad_accumulation_steps == 0:
+                        self.ema_model.update()
 
                 global_step += 1
 
@@ -364,8 +368,8 @@ class Trainer:
                 if global_step % (self.save_per_updates * self.grad_accumulation_steps) == 0:
                     #self.save_checkpoint(global_step)
 
-                    self.save_checkpoint_backup(global_step, "/home/k4/Python/F5-TTS-Fork/ckpts/russian_dataset_ft_translit_pinyin_e2")
-                    exit() 
+                    self.save_checkpoint_backup(global_step, self.checkpoint_path)
+                    #exit() 
 
                 if False:#global_step % self.samples_per_updates == 0 and self.log_samples and self.accelerator.is_local_main_process:
                     ref_audio, ref_audio_len = vocoder.decode(batch["mel"][0].unsqueeze(0)), mel_lengths[0]

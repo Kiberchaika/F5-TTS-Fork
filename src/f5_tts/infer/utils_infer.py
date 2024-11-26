@@ -550,6 +550,7 @@ def infer_single_process(
     start_step=0,
     end_step=0,
     initial_state=None,
+    stretch_factor = 1.0,
     seed=None,  # Add seed parameter
 ):
     """Inference process for a single text input without batching."""
@@ -590,6 +591,7 @@ def infer_single_process(
         gen_text_len = len(gen_text.encode("utf-8"))
         duration = ref_audio_len + int(ref_audio_len / ref_text_len * gen_text_len / speed)
     if initial_state is not None:
+        ref_audio_len = int(ref_audio_len * stretch_factor)
         duration = initial_state.shape[1]
 
     # inference
